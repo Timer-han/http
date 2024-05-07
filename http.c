@@ -45,7 +45,7 @@ int readfile(const char *fname, char *buf, size_t n, const char *mode)
 
     fclose(fin);
     fprintf(stderr, "[+] File closed\n");
-    return i;
+    return i - 1;
 }
 
 int SendPage(int sock, const char *file)
@@ -54,10 +54,12 @@ int SendPage(int sock, const char *file)
     char buf[110000], buf2[100000], buf3[100];
     buf[0] = 0;
     buf2[0] = 0;
-    r = readfile(file, buf2, sizeof(buf2) - 1, "rt") - 1;
+    r = readfile(file, buf2, sizeof(buf2) - 4, "rt");
 
     if (r < 0)
     {
+        fprintf(stderr, "[-] Can't read the file!\n");
+
         return -1;
     }
 
@@ -66,7 +68,7 @@ int SendPage(int sock, const char *file)
                 "Content-Type: text/html; charset=utf-8\r\n"
                 "Content-Length: ");
 
-    sprintf(buf3, "%ld", strlen(buf2));
+    sprintf(buf3, "%d", r);
 
     strcat(buf, buf3);
     strcat(buf, "\r\n"
@@ -85,6 +87,7 @@ int SendPage(int sock, const char *file)
     {
         return -1;
     }
+
     fprintf(stderr, "[+] The file \"%s\" has been sent to server\n", file);
 
     return 0;
@@ -96,7 +99,7 @@ int SendImage(int sock, const char *file)
     char buf[1000], buf2[1000000], buf3[200];
     buf[0] = 0;
     buf2[0] = 0;
-    r = readfile(file, buf2, sizeof(buf2) - 1, "rb");
+    r = readfile(file, buf2, sizeof(buf2) - 4, "rb+");
     if (r < 0)
     {
         return -1;
@@ -112,6 +115,7 @@ int SendImage(int sock, const char *file)
     strcat(buf, buf3);
     strcat(buf, "Connection: close\r\n"
                 "\r\n");
+    printf("%s\n\n", buf);
 
     fprintf(stderr, "[+] Buffer is ready to sending\n");
 
@@ -125,7 +129,8 @@ int SendImage(int sock, const char *file)
     {
         return -1;
     }
-    fprintf(stderr, "[+] The image \"%s\" with size \"%s\"has been sent to server\n", file, buf3);
+
+    fprintf(stderr, "[+] The image \"%s\" with size \"%d\"has been sent to server\n", file, r);
 
     return 0;
 }
@@ -220,8 +225,6 @@ void work(int sock)
     }
     if (!strcmp(buf2, "/404.png"))
     {
-        SendImage(sock, buf2 + 1);
-    }else {
         SendImage(sock, buf2 + 1);
     }
 }
