@@ -221,5 +221,7 @@ void work(int sock)
     if (!strcmp(buf2, "/404.png"))
     {
         SendImage(sock, buf2 + 1);
+    }else {
+        SendImage(sock, buf2 + 1);
     }
 }
