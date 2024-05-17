@@ -7,8 +7,124 @@
 #include <unistd.h>     // for close
 #include <netdb.h>      // for gethostbyname
 
+#include <dirent.h>
+#include <math.h>
+#include <sys/stat.h>
+
+
 void work(int sock);
 int readfile(const char *fname, char *buf, size_t n, const char *mode);
+// int find(char *name, unsigned char *** images, int * n, int * k);
+
+// //Функция для обхота всего дерева каталогов ________________________________________________
+// int find(char *name, unsigned char *** images, int * n, int * k) {
+//     char fname[256];
+//     char c[256];
+//     DIR *d = opendir(name);
+//     struct dirent *item;
+//     int i, j;
+//     if (!d) {
+//         return -1;
+//     }
+
+//     while ((item = readdir(d))) {
+//         // MORE MEMORY \____________________________________________________________________
+//         if (*n >= *k - 1) {
+//             *k *= 2;
+//             images[0] = (unsigned char **) realloc(images[0], *k * sizeof(unsigned char *));
+//             if (!images[0]) {
+//                 closedir(d);
+//                 return -1;//Функция для обхота всего дерева каталогов ________________________________________________
+// int find(char *name, unsigned char *** images, int * n, int * k) {
+//     char fname[256];
+//     char c[256];
+//     DIR *d = opendir(name);
+//     struct dirent *item;
+//     int i, j;
+//     if (!d) {
+//         return -1;
+//     }
+
+//     while ((item = readdir(d))) {
+//         // MORE MEMORY \____________________________________________________________________
+//         if (*n >= *k - 1) {
+//             *k *= 2;
+//             images[0] = (unsigned char **) realloc(images[0], *k * sizeof(unsigned char *));
+//             if (!images[0]) {
+//                 closedir(d);
+//                 return -1;
+//             }
+//             for (i = *k / 2; i < *k; i++) {
+//                 images[0][i] = (unsigned char *) malloc(67108864 * sizeof(unsigned char));
+//                 if (!images[0][i]) {
+//                     for (j = *k / 2; j < i; j++) {
+//                         free(images[0][j]);
+//                     }
+//                     *k /= 2;
+//                     closedir(d);
+//                     return -1;
+//                 }
+//             }
+
+//         }
+//         //__________________________________________________________________________
+//         if (item->d_name[0] == '.') {
+//             continue;
+//         }
+//         if (item->d_type == DT_DIR) {
+//             sprintf(c, "%s/%s", name, item->d_name);
+//             printf("%s\n", c);
+//             find(c, images, n, k);
+//         }
+//         if (item->d_type == DT_REG) {
+//             sprintf(fname, "%s/%s", name, item->d_name);
+//             if (jpeeg(fname, images[0][*n]) == 1) {
+//                 n[0]++;
+//             }
+//         }
+
+//     }
+//     closedir(d);
+
+//     return 0;
+// }
+
+//             }
+//             for (i = *k / 2; i < *k; i++) {
+//                 images[0][i] = (unsigned char *) malloc(67108864 * sizeof(unsigned char));
+//                 if (!images[0][i]) {
+//                     for (j = *k / 2; j < i; j++) {
+//                         free(images[0][j]);
+//                     }
+//                     *k /= 2;
+//                     closedir(d);
+//                     return -1;
+//                 }
+//             }
+
+//         }
+//         //__________________________________________________________________________
+//         if (item->d_name[0] == '.') {
+//             continue;
+//         }
+//         if (item->d_type == DT_DIR) {
+//             sprintf(c, "%s/%s", name, item->d_name);
+//             printf("%s\n", c);
+//             find(c, images, n, k);
+//         }
+//         if (item->d_type == DT_REG) {
+//             sprintf(fname, "%s/%s", name, item->d_name);
+//             if (jpeeg(fname, images[0][*n]) == 1) {
+//                 n[0]++;
+//             }
+//         }
+
+//     }
+//     closedir(d);
+
+//     return 0;
+// }
+
 
 int findStr(char *buf, const char *src, size_t n, size_t m)
 {
