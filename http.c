@@ -11,9 +11,11 @@
 #include <math.h>
 #include <sys/stat.h>
 
-
 void work(int sock);
 int readfile(const char *fname, char *buf, size_t n, const char *mode);
+int SendImage(int sock, const char *file, const char *type);
+int SendPage(int sock, const char *file);
+
 // int find(char *name, unsigned char *** images, int * n, int * k);
 
 // //Функция для обхота всего дерева каталогов ________________________________________________
@@ -125,7 +127,6 @@ int readfile(const char *fname, char *buf, size_t n, const char *mode);
 //     return 0;
 // }
 
-
 int findStr(char *buf, const char *src, size_t n, size_t m)
 {
     for (size_t i = 0; i < n - m; i++)
@@ -152,7 +153,8 @@ int readfile(const char *fname, char *buf, size_t n, const char *mode)
     while (!feof(fin))
     {
         buf[i++] = fgetc(fin);
-        if (i > n + 4){
+        if (i > n + 4)
+        {
             fprintf(stderr, "[-] Not enoufh mem\n");
             return -2;
         }
@@ -209,10 +211,10 @@ int SendPage(int sock, const char *file)
     return 0;
 }
 
-int SendImage(int sock, const char *file)
+int SendImage(int sock, const char *file, const char *type)
 {
     int r, n;
-    char buf[1000], buf2[1000000], buf3[200];
+    char buf[1000], buf2[5000000], buf3[200];
     buf[0] = 0;
     buf2[0] = 0;
     r = readfile(file, buf2, sizeof(buf2) - 4, "rb+");
@@ -223,11 +225,11 @@ int SendImage(int sock, const char *file)
 
     strcat(buf, "HTTP/1.0 200 OK\r\n"
                 "Content-Language: ru\r\n"
-                "Content-Type: image/png\r\n"
+                "Content-Type: image/");
+    strcat(buf, type);
+    strcat(buf, "\r\n"
                 "Content-Length: ");
-
     sprintf(buf3, "%d\r\n", r);
-
     strcat(buf, buf3);
     strcat(buf, "Connection: close\r\n"
                 "\r\n");
@@ -337,10 +339,38 @@ void work(int sock)
     printf("[+] Trying to send the file: %s\n", buf2);
     if (!strcmp(buf2, "/"))
     {
-        SendPage(sock, "first_page.html");
+        SendPage(sock, "./first_page/page.html");
     }
-    if (!strcmp(buf2, "/404.png"))
+    if (!strcmp(buf2, "first_page/404.png"))
     {
-        SendImage(sock, buf2 + 1);
+        SendImage(sock, "./first_page/404.png", "png");
+    }
+    if (!strcmp(buf2, "/top5meme/page.html"))
+    {
+        SendPage(sock, "./top5meme/page.html");
+    }
+    if (!strcmp(buf2, "/top5meme/1.png"))
+    {
+        SendImage(sock, "./top5meme/1.png", "png");
+    }
+    if (!strcmp(buf2, "/top5meme/2.jpg"))
+    {
+        SendImage(sock, "./top5meme/2.jpg", "jpg");
+    }
+    if (!strcmp(buf2, "/top5meme/3.jpg"))
+    {
+        SendImage(sock, "./top5meme/3.jpg", "jpg");
+    }
+    if (!strcmp(buf2, "/top5meme/4.png"))
+    {
+        SendImage(sock, "./top5meme/4.png", "png");
+    }
+    if (!strcmp(buf2, "/top5meme/5.jpg"))
+    {
+        SendImage(sock, "./top5meme/5.jpg", "jpg");
+    }
+    if (!strcmp(buf2, "/first_page/404.png"))
+    {
+        SendImage(sock, "./first_page/404.png", "png");
     }
 }
