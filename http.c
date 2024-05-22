@@ -12,90 +12,9 @@
 #include <sys/stat.h>
 
 void work(int sock);
-int SendImage(int sock, const char *file, const char *type);
-int SendPage(int sock, const char *file);
+int SendFile(int sock, const char *file, const char *type);
 
-int SendPage(int sock, const char *file)
-{
-    int r, n = -1;
-    char buf[512];
-    FILE *fin = fopen(file, "rt");
-
-    if (!fin) {
-        fprintf(stderr, "[-] Can't open the image\n");
-        return -1;
-    }
-    fprintf(stderr, "[+] File opened\n");
-
-    while (!feof(fin)) {
-        fgetc(fin);
-        n++;
-    }
-    fprintf(stderr, "[+] size of \"%s\" is %d\n", file, n);
-    rewind(fin);
-
-    if (n < 0) {
-        fclose(fin);
-        return -1;
-    }
-
-    fprintf(stderr, "[+] Trying to send the request\n");
-
-    strcpy(buf, "HTTP/1.0 200 OK\r\n"
-                "Content-Language: ru\r\n"
-                "Content-Type: text/html; charset=utf-8\r\n"
-                "Content-Length: ");
-
-    if (send(sock, buf, strlen(buf), 0) < 0) {
-        fprintf(stderr, "[-] Can't send data\n");
-        fclose(fin);
-        return -1;
-    }
-
-    sprintf(buf, "%d", n);
-    if (send(sock, buf, strlen(buf), 0) < 0) {
-        fprintf(stderr, "[-] Can't send data\n");
-        fclose(fin);
-        return -1;
-    }
-
-    strcpy(buf, "\r\n"
-                "Connection: close\r\n"
-                "\r\n");
-    if (send(sock, buf, strlen(buf), 0) < 0) {
-        fprintf(stderr, "[-] Can't send data\n");
-        fclose(fin);
-        return -1;
-    }
-
-    fprintf(stderr, "[+] Sending the file\n");
-
-    for (int i = 0; i < n / 500; i++) {
-        for (int j = 0; j < 500; j++) {
-            buf[j] = fgetc(fin);
-        }
-        if (send(sock, buf, 500, 0) < 0) {
-            fprintf(stderr, "[-] Can't send data\n");
-            fclose(fin);
-            return -1;
-        }
-    }
-    for (int j = 0; j < n % 500; j++) {
-        buf[j] = fgetc(fin);
-    }
-    if (send(sock, buf, 500, 0) < 0) {
-        fprintf(stderr, "[-] Can't send data\n");
-        fclose(fin);
-        return -1;
-    }
-
-    fprintf(stderr, "[+] The file \"%s\" has been sent to server\n", file);
-    fclose(fin);
-    fprintf(stderr, "[+] File closed\n");
-    return 0;
-}
-
-int SendImage(int sock, const char *file, const char *type)
+int SendFile(int sock, const char *file, const char *type)
 {
     int r, n = -1;
     char buf[512];
@@ -123,25 +42,13 @@ int SendImage(int sock, const char *file, const char *type)
 
     strcpy(buf, "HTTP/1.0 200 OK\r\n"
                 "Content-Language: ru\r\n"
-                "Content-Type: image/");
+                "Content-Type: ");
     strcat(buf, type);
     strcat(buf, "\r\n"
                 "Content-Length: ");
+    sprintf(buf + strlen(buf), "%d", n);
 
-    if (send(sock, buf, strlen(buf), 0) < 0) {
-        fprintf(stderr, "[-] Can't send data\n");
-        fclose(fin);
-        return -1;
-    }
-
-    sprintf(buf, "%d", n);
-    if (send(sock, buf, strlen(buf), 0) < 0) {
-        fprintf(stderr, "[-] Can't send data\n");
-        fclose(fin);
-        return -1;
-    }
-
-    strcpy(buf, "\r\n"
+    strcat(buf, "\r\n"
                 "Connection: close\r\n"
                 "\r\n");
     if (send(sock, buf, strlen(buf), 0) < 0) {
@@ -149,6 +56,7 @@ int SendImage(int sock, const char *file, const char *type)
         fclose(fin);
         return -1;
     }
+    
 
     fprintf(stderr, "[+] Sending the file\n");
 
@@ -255,36 +163,36 @@ void work(int sock)
 
     printf("[+] Trying to send the file: %s\n", buf2);
     if (!strcmp(buf2, "/")) {
-        SendPage(sock, "./first_page/page.html");
+        SendFile(sock, "./first_page/page.html", "text/html; charset=utf-8");
     }
     else if (!strcmp(buf2, "first_page/404.png")) {
-        SendImage(sock, "./first_page/404.png", "png");
+        SendFile(sock, "./first_page/404.png", "image/png");
     }
     else if (!strcmp(buf2, "/top5meme/page.html")) {
-        SendPage(sock, "./top5meme/page.html");
+        SendFile(sock, "./top5meme/page.html", "text/html; charset=utf-8");
     }
     else if (!strcmp(buf2, "/top5meme/1.png")) {
-        SendImage(sock, "./top5meme/1.png", "png");
+        SendFile(sock, "./top5meme/1.png", "image/png");
     }
     else if (!strcmp(buf2, "/top5meme/2.jpg")) {
-        SendImage(sock, "./top5meme/2.jpg", "jpg");
+        SendFile(sock, "./top5meme/2.jpg", "image/jpg");
     }
     else if (!strcmp(buf2, "/top5meme/3.jpg")) {
-        SendImage(sock, "./top5meme/3.jpg", "jpg");
+        SendFile(sock, "./top5meme/3.jpg", "image/jpg");
     }
     else if (!strcmp(buf2, "/top5meme/4.png")) {
-        SendImage(sock, "./top5meme/4.png", "png");
+        SendFile(sock, "./top5meme/4.png", "image/png");
     }
     else if (!strcmp(buf2, "/top5meme/5.jpg")) {
-        SendImage(sock, "./top5meme/5.jpg", "jpg");
+        SendFile(sock, "./top5meme/5.jpg", "image/jpg");
     }
     else if (!strcmp(buf2, "/first_page/404.png")) {
-        SendImage(sock, "./first_page/404.png", "png");
+        SendFile(sock, "./first_page/404.png", "image/png");
     }
     else if (!strcmp(buf2, "/favicon.ico")) {
-        SendImage(sock, "./favicon.ico", "ico");
+        SendFile(sock, "./favicon.ico", "image/ico");
     }
     else {
-        SendImage(sock, "./first_page/404.png", "png");
+        SendFile(sock, "./first_page/404.png", "image/png");
     }
 }
