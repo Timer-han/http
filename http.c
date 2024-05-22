@@ -12,244 +12,171 @@
 #include <sys/stat.h>
 
 void work(int sock);
-int readfile(const char *fname, char *buf, size_t n, const char *mode);
 int SendImage(int sock, const char *file, const char *type);
 int SendPage(int sock, const char *file);
 
-// int find(char *name, unsigned char *** images, int * n, int * k);
 
-// //Функция для обхота всего дерева каталогов ________________________________________________
-// int find(char *name, unsigned char *** images, int * n, int * k) {
-//     char fname[256];
-//     char c[256];
-//     DIR *d = opendir(name);
-//     struct dirent *item;
-//     int i, j;
-//     if (!d) {
-//         return -1;
-//     }
-
-//     while ((item = readdir(d))) {
-//         // MORE MEMORY \____________________________________________________________________
-//         if (*n >= *k - 1) {
-//             *k *= 2;
-//             images[0] = (unsigned char **) realloc(images[0], *k * sizeof(unsigned char *));
-//             if (!images[0]) {
-//                 closedir(d);
-//                 return -1;//Функция для обхота всего дерева каталогов ________________________________________________
-// int find(char *name, unsigned char *** images, int * n, int * k) {
-//     char fname[256];
-//     char c[256];
-//     DIR *d = opendir(name);
-//     struct dirent *item;
-//     int i, j;
-//     if (!d) {
-//         return -1;
-//     }
-
-//     while ((item = readdir(d))) {
-//         // MORE MEMORY \____________________________________________________________________
-//         if (*n >= *k - 1) {
-//             *k *= 2;
-//             images[0] = (unsigned char **) realloc(images[0], *k * sizeof(unsigned char *));
-//             if (!images[0]) {
-//                 closedir(d);
-//                 return -1;
-//             }
-//             for (i = *k / 2; i < *k; i++) {
-//                 images[0][i] = (unsigned char *) malloc(67108864 * sizeof(unsigned char));
-//                 if (!images[0][i]) {
-//                     for (j = *k / 2; j < i; j++) {
-//                         free(images[0][j]);
-//                     }
-//                     *k /= 2;
-//                     closedir(d);
-//                     return -1;
-//                 }
-//             }
-
-//         }
-//         //__________________________________________________________________________
-//         if (item->d_name[0] == '.') {
-//             continue;
-//         }
-//         if (item->d_type == DT_DIR) {
-//             sprintf(c, "%s/%s", name, item->d_name);
-//             printf("%s\n", c);
-//             find(c, images, n, k);
-//         }
-//         if (item->d_type == DT_REG) {
-//             sprintf(fname, "%s/%s", name, item->d_name);
-//             if (jpeeg(fname, images[0][*n]) == 1) {
-//                 n[0]++;
-//             }
-//         }
-
-//     }
-//     closedir(d);
-
-//     return 0;
-// }
-
-//             }
-//             for (i = *k / 2; i < *k; i++) {
-//                 images[0][i] = (unsigned char *) malloc(67108864 * sizeof(unsigned char));
-//                 if (!images[0][i]) {
-//                     for (j = *k / 2; j < i; j++) {
-//                         free(images[0][j]);
-//                     }
-//                     *k /= 2;
-//                     closedir(d);
-//                     return -1;
-//                 }
-//             }
-
-//         }
-//         //__________________________________________________________________________
-//         if (item->d_name[0] == '.') {
-//             continue;
-//         }
-//         if (item->d_type == DT_DIR) {
-//             sprintf(c, "%s/%s", name, item->d_name);
-//             printf("%s\n", c);
-//             find(c, images, n, k);
-//         }
-//         if (item->d_type == DT_REG) {
-//             sprintf(fname, "%s/%s", name, item->d_name);
-//             if (jpeeg(fname, images[0][*n]) == 1) {
-//                 n[0]++;
-//             }
-//         }
-
-//     }
-//     closedir(d);
-
-//     return 0;
-// }
-
-int findStr(char *buf, const char *src, size_t n, size_t m)
+int SendPage(int sock, const char *file)
 {
-    for (size_t i = 0; i < n - m; i++)
-    {
-        if (!strncmp(buf + i, src, m))
-        {
-            return i;
-        }
-    }
-    return -1;
-}
+    int r, n = -1;
+    char buf[512];
+    FILE *fin = fopen(file, "rt");
 
-int readfile(const char *fname, char *buf, size_t n, const char *mode)
-{
-    FILE *fin = fopen(fname, mode);
-    int i = 0;
-    if (!fin)
-    {
+    if (!fin) {
         fprintf(stderr, "[-] Can't open the image\n");
         return -1;
     }
     fprintf(stderr, "[+] File opened\n");
 
-    while (!feof(fin))
-    {
-        buf[i++] = fgetc(fin);
-        if (i > n + 4)
-        {
-            fprintf(stderr, "[-] Not enoufh mem\n");
-            return -2;
-        }
+    while (!feof(fin)) {
+        fgetc(fin);
+        n++;
     }
-    fprintf(stderr, "[+] File copied into buffer\n");
+    fprintf(stderr, "[+] size of \"%s\" is %d\n", file, n);
+    rewind(fin);
 
-    fclose(fin);
-    fprintf(stderr, "[+] File closed\n");
-    return i - 1;
-}
-
-int SendPage(int sock, const char *file)
-{
-    int r, n;
-    char buf[110000], buf2[100000], buf3[100];
-    buf[0] = 0;
-    buf2[0] = 0;
-    r = readfile(file, buf2, sizeof(buf2) - 4, "rt");
-
-    if (r < 0)
-    {
-        fprintf(stderr, "[-] Can't read the file!\n");
-
+    if (n < 0) {
+        fclose(fin);
         return -1;
     }
 
-    strcat(buf, "HTTP/1.0 200 OK\r\n"
+    fprintf(stderr, "[+] Trying to send the request\n");
+
+    strcpy(buf, "HTTP/1.0 200 OK\r\n"
                 "Content-Language: ru\r\n"
                 "Content-Type: text/html; charset=utf-8\r\n"
                 "Content-Length: ");
 
-    sprintf(buf3, "%d", r);
+    if (send(sock, buf, strlen(buf), 0) < 0) {
+        fprintf(stderr, "[-] Can't send data\n");
+        fclose(fin);
+        return -1;
+    }
 
-    strcat(buf, buf3);
-    strcat(buf, "\r\n"
+    sprintf(buf, "%d", n);
+    if (send(sock, buf, strlen(buf), 0) < 0) {
+        fprintf(stderr, "[-] Can't send data\n");
+        fclose(fin);
+        return -1;
+    }
+
+    strcpy(buf, "\r\n"
                 "Connection: close\r\n"
                 "\r\n");
-
-    fprintf(stderr, "[+] Buffer is ready to sending\n");
-
-    n = send(sock, buf, strlen(buf), 0);
-    if (n < 0)
-    {
+    if (send(sock, buf, strlen(buf), 0) < 0) {
+        fprintf(stderr, "[-] Can't send data\n");
+        fclose(fin);
         return -1;
     }
-    n = send(sock, buf2, r, 0);
-    if (n < 0)
-    {
+
+    fprintf(stderr, "[+] Sending the file\n");
+
+    for (int i = 0; i < n / 500; i++) {
+        for (int j = 0; j < 500; j++) {
+            buf[j] = fgetc(fin);
+        }
+        if (send(sock, buf, 500, 0) < 0) {
+            fprintf(stderr, "[-] Can't send data\n");
+            fclose(fin);
+            return -1;
+        }
+    }
+    for (int j = 0; j < n % 500; j++) {
+        buf[j] = fgetc(fin);
+    }
+    if (send(sock, buf, 500, 0) < 0) {
+        fprintf(stderr, "[-] Can't send data\n");
+        fclose(fin);
         return -1;
     }
+
 
     fprintf(stderr, "[+] The file \"%s\" has been sent to server\n", file);
-
+    fclose(fin);
+    fprintf(stderr, "[+] File closed\n");
     return 0;
 }
 
 int SendImage(int sock, const char *file, const char *type)
 {
-    int r, n;
-    char buf[1000], buf2[5000000], buf3[200];
-    buf[0] = 0;
-    buf2[0] = 0;
-    r = readfile(file, buf2, sizeof(buf2) - 4, "rb+");
-    if (r < 0)
-    {
+    int r, n = -1;
+    char buf[512];
+    FILE *fin = fopen(file, "rb");
+
+    if (!fin) {
+        fprintf(stderr, "[-] Can't open the image\n");
+        return -1;
+    }
+    fprintf(stderr, "[+] File opened\n");
+
+    while (!feof(fin)) {
+        fgetc(fin);
+        n++;
+    }
+    fprintf(stderr, "[+] size of \"%s\" is %d\n", file, n);
+    rewind(fin);
+
+    if (n < 0) {
+        fclose(fin);
         return -1;
     }
 
-    strcat(buf, "HTTP/1.0 200 OK\r\n"
+    fprintf(stderr, "[+] Trying to send the request\n");
+
+    strcpy(buf, "HTTP/1.0 200 OK\r\n"
                 "Content-Language: ru\r\n"
                 "Content-Type: image/");
     strcat(buf, type);
     strcat(buf, "\r\n"
                 "Content-Length: ");
-    sprintf(buf3, "%d\r\n", r);
-    strcat(buf, buf3);
-    strcat(buf, "Connection: close\r\n"
+
+    if (send(sock, buf, strlen(buf), 0) < 0) {
+        fprintf(stderr, "[-] Can't send data\n");
+        fclose(fin);
+        return -1;
+    }
+
+    sprintf(buf, "%d", n);
+    if (send(sock, buf, strlen(buf), 0) < 0) {
+        fprintf(stderr, "[-] Can't send data\n");
+        fclose(fin);
+        return -1;
+    }
+
+    strcpy(buf, "\r\n"
+                "Connection: close\r\n"
                 "\r\n");
-    printf("%s\n\n", buf);
-
-    fprintf(stderr, "[+] Buffer is ready to sending\n");
-
-    n = send(sock, buf, strlen(buf), 0);
-    if (n < 0)
-    {
-        return -1;
-    }
-    n = send(sock, buf2, r, 0);
-    if (n < 0)
-    {
+    if (send(sock, buf, strlen(buf), 0) < 0) {
+        fprintf(stderr, "[-] Can't send data\n");
+        fclose(fin);
         return -1;
     }
 
-    fprintf(stderr, "[+] The image \"%s\" with size \"%d\"has been sent to server\n", file, r);
+    fprintf(stderr, "[+] Sending the file\n");
 
+    for (int i = 0; i < n / 500; i++) {
+        for (int j = 0; j < 500; j++) {
+            buf[j] = fgetc(fin);
+        }
+        if (send(sock, buf, 500, 0) < 0) {
+            fprintf(stderr, "[-] Can't send data\n");
+            fclose(fin);
+            return -1;
+        }
+    }
+    for (int j = 0; j < n % 500; j++) {
+        buf[j] = fgetc(fin);
+    }
+    if (send(sock, buf, 500, 0) < 0) {
+        fprintf(stderr, "[-] Can't send data\n");
+        fclose(fin);
+        return -1;
+    }
+
+
+    fprintf(stderr, "[+] The file \"%s\" has been sent to server\n", file);
+    fclose(fin);
+    fprintf(stderr, "[+] File closed\n");
     return 0;
 }
 
@@ -261,8 +188,7 @@ int main(int, char **)
     struct linger linger_opt = {1, 0};
     socklen_t peer_addr_size = sizeof(peer_addr);
     sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0)
-    {
+    if (sock < 0) {
         printf("[-] Can't create socket\n");
         return -1;
     }
@@ -270,30 +196,25 @@ int main(int, char **)
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
     addr.sin_port = htons(port);
     addr.sin_family = AF_INET;
-    if (bind(sock, (const struct sockaddr *)&addr, sizeof(addr)) != 0)
-    {
+    if (bind(sock, (const struct sockaddr *)&addr, sizeof(addr)) != 0) {
         printf("[-] Can't bind socket to port\n");
         close(sock);
         return -1;
     }
-    if (setsockopt(sock, SOL_SOCKET, SO_LINGER, &linger_opt, sizeof(linger_opt)) != 0)
-    {
+    if (setsockopt(sock, SOL_SOCKET, SO_LINGER, &linger_opt, sizeof(linger_opt)) != 0) {
         printf("[-] Can't linger socket\n");
         close(sock);
         return -1;
     }
-    if (listen(sock, 2) != 0)
-    {
+    if (listen(sock, 2) != 0) {
         printf("[-] Can't set listen queue for socket\n");
         close(sock);
         return -1;
     }
     printf("[+] Server listening on port %d\n", port);
-    while (1)
-    {
+    while (1) {
         sock_peer = accept(sock, (struct sockaddr *)&peer_addr, &peer_addr_size);
-        if (sock_peer < 0)
-        {
+        if (sock_peer < 0) {
             printf("[-] Can't accept new connection\n");
             close(sock);
             return -1;
