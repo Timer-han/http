@@ -1,11 +1,11 @@
+#include <netdb.h>      // for gethostbyname
+#include <netinet/in.h> // sockaddr_in
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <string.h>
 #include <sys/socket.h> // for socket
-#include <netinet/in.h> // sockaddr_in
-#include <unistd.h>     // for close
-#include <netdb.h>      // for gethostbyname
+#include <sys/time.h>
+#include <unistd.h> // for close
 
 #include <dirent.h>
 #include <math.h>
@@ -14,7 +14,6 @@
 void work(int sock);
 int SendImage(int sock, const char *file, const char *type);
 int SendPage(int sock, const char *file);
-
 
 int SendPage(int sock, const char *file)
 {
@@ -89,7 +88,6 @@ int SendPage(int sock, const char *file)
         fclose(fin);
         return -1;
     }
-
 
     fprintf(stderr, "[+] The file \"%s\" has been sent to server\n", file);
     fclose(fin);
@@ -173,7 +171,6 @@ int SendImage(int sock, const char *file, const char *type)
         return -1;
     }
 
-
     fprintf(stderr, "[+] The file \"%s\" has been sent to server\n", file);
     fclose(fin);
     fprintf(stderr, "[+] File closed\n");
@@ -221,7 +218,8 @@ int main(int, char **)
         }
         ip_h = ntohl(peer_addr.sin_addr.s_addr);
 
-        printf("[+] New connection accepted from %d.%d.%d.%d on port %d\n", (ip_h >> 24) & 0xff, (ip_h >> 16) & 0xff, (ip_h >> 8) & 0xff, ip_h & 0xff, htons(peer_addr.sin_port));
+        printf("[+] New connection accepted from %d.%d.%d.%d on port %d\n", (ip_h >> 24) & 0xff, (ip_h >> 16) & 0xff,
+               (ip_h >> 8) & 0xff, ip_h & 0xff, htons(peer_addr.sin_port));
 
         work(sock_peer);
     }
@@ -248,50 +246,45 @@ void work(int sock)
 
     buf2[0] = 0;
     strcat(buf2, buf + 4);
-    for (size_t i = 0; i < strlen(buf2); i++)
-    {
-        if (buf2[i] == ' ' || buf2[i] == '\n')
-        {
+    for (size_t i = 0; i < strlen(buf2); i++) {
+        if (buf2[i] == ' ' || buf2[i] == '\n') {
             buf2[i] = 0;
             break;
         }
     }
 
     printf("[+] Trying to send the file: %s\n", buf2);
-    if (!strcmp(buf2, "/"))
-    {
+    if (!strcmp(buf2, "/")) {
         SendPage(sock, "./first_page/page.html");
     }
-    if (!strcmp(buf2, "first_page/404.png"))
-    {
+    else if (!strcmp(buf2, "first_page/404.png")) {
         SendImage(sock, "./first_page/404.png", "png");
     }
-    if (!strcmp(buf2, "/top5meme/page.html"))
-    {
+    else if (!strcmp(buf2, "/top5meme/page.html")) {
         SendPage(sock, "./top5meme/page.html");
     }
-    if (!strcmp(buf2, "/top5meme/1.png"))
-    {
+    else if (!strcmp(buf2, "/top5meme/1.png")) {
         SendImage(sock, "./top5meme/1.png", "png");
     }
-    if (!strcmp(buf2, "/top5meme/2.jpg"))
-    {
+    else if (!strcmp(buf2, "/top5meme/2.jpg")) {
         SendImage(sock, "./top5meme/2.jpg", "jpg");
     }
-    if (!strcmp(buf2, "/top5meme/3.jpg"))
-    {
+    else if (!strcmp(buf2, "/top5meme/3.jpg")) {
         SendImage(sock, "./top5meme/3.jpg", "jpg");
     }
-    if (!strcmp(buf2, "/top5meme/4.png"))
-    {
+    else if (!strcmp(buf2, "/top5meme/4.png")) {
         SendImage(sock, "./top5meme/4.png", "png");
     }
-    if (!strcmp(buf2, "/top5meme/5.jpg"))
-    {
+    else if (!strcmp(buf2, "/top5meme/5.jpg")) {
         SendImage(sock, "./top5meme/5.jpg", "jpg");
     }
-    if (!strcmp(buf2, "/first_page/404.png"))
-    {
+    else if (!strcmp(buf2, "/first_page/404.png")) {
+        SendImage(sock, "./first_page/404.png", "png");
+    }
+    else if (!strcmp(buf2, "/favicon.ico")) {
+        SendImage(sock, "./favicon.ico", "ico");
+    }
+    else {
         SendImage(sock, "./first_page/404.png", "png");
     }
 }
