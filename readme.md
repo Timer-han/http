@@ -3,8 +3,8 @@
 ## LOGIC
 `http.c` - основная логика. Некоторые функции:
 
-`SendFile` - отправка изображения формата png, html страницы
-`work` - работа внутри одного треда
+- `SendFile` - отправка изображения формата png, html страницы 
+- `work` - работа внутри одного треда
 
 ## StartPage
 Стартовая html страница [first_page.html](./first_page/page.html) содержит просто текст, [картинку](./first_page/404.png) и ссылку на сайт [page.html](./top5meme/page.html) с мемами
