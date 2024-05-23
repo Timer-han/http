@@ -11,8 +11,11 @@
 #include <math.h>
 #include <sys/stat.h>
 
-void work(int sock);
+#include <pthread.h> 
+
+void *work(void *sok);
 int SendFile(int sock, const char *file, const char *type);
+
 
 int SendFile(int sock, const char *file, const char *type)
 {
@@ -92,6 +95,7 @@ int main(int, char **)
     struct sockaddr_in addr, peer_addr;
     struct linger linger_opt = {1, 0};
     socklen_t peer_addr_size = sizeof(peer_addr);
+    pthread_t thread1;
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         printf("[-] Can't create socket\n");
@@ -128,14 +132,17 @@ int main(int, char **)
 
         printf("[+] New connection accepted from %d.%d.%d.%d on port %d\n", (ip_h >> 24) & 0xff, (ip_h >> 16) & 0xff,
                (ip_h >> 8) & 0xff, ip_h & 0xff, htons(peer_addr.sin_port));
+        if ((int) ((ip_h >> 24) & 0xff) == 14) {
+            continue;
+        }
+        pthread_create(&thread1, NULL, work, (void*) (&sock_peer));
 
-        work(sock_peer);
     }
     close(sock);
     return 0;
 }
 
-void work(int sock)
+void *work(void *sok)
 {
     // ZDES CHTO DELAEM:
     // 1. recv
@@ -146,53 +153,65 @@ void work(int sock)
     // 3. Открываем указанный файл
     // 4. Формируем ответ
     // 5. Делаем send()
-    char buf[10000], buf2[10000];
-    int r;
-    r = recv(sock, buf, sizeof(buf) - 1, 0);
-    buf[r] = '\0';
-    printf("[+] Buf:\n%s\n", buf);
+    char buf[1000];
+    int r, sock = *((int *)sok);
+    fprintf(stderr, "--------------------------------------------------------[+] Starting work with sock %d\n", sock);
 
-    buf2[0] = 0;
-    strcat(buf2, buf + 4);
-    for (size_t i = 0; i < strlen(buf2); i++) {
-        if (buf2[i] == ' ' || buf2[i] == '\n') {
-            buf2[i] = 0;
+
+    r = recv(sock, buf, sizeof(buf) - 1, 0);
+    if (r <= 3){
+        return NULL;
+    }
+    buf[r] = '\0';
+
+    if (strncmp(buf, "GET", 3)){
+        return NULL;
+    }
+
+    printf("[+] Buf:\n%s\n", buf);
+    strcpy(buf, buf + 4);
+    for (size_t i = 0; i < strlen(buf); i++) {
+        if (buf[i] == ' ' || buf[i] == '\n') {
+            buf[i] = 0;
             break;
         }
     }
 
-    printf("[+] Trying to send the file: %s\n", buf2);
-    if (!strcmp(buf2, "/")) {
+
+    printf("[+] Trying to send the file: %s\n", buf);
+    if (!strcmp(buf, "/")) {
         SendFile(sock, "./first_page/page.html", "text/html; charset=utf-8");
     }
-    else if (!strcmp(buf2, "first_page/404.png")) {
+    else if (!strcmp(buf, "first_page/404.png")) {
         SendFile(sock, "./first_page/404.png", "image/png");
     }
-    else if (!strcmp(buf2, "/top5meme/page.html")) {
+    else if (!strcmp(buf, "/top5meme/page.html")) {
         SendFile(sock, "./top5meme/page.html", "text/html; charset=utf-8");
     }
-    else if (!strcmp(buf2, "/top5meme/1.png")) {
+    else if (!strcmp(buf, "/top5meme/1.png")) {
         SendFile(sock, "./top5meme/1.png", "image/png");
     }
-    else if (!strcmp(buf2, "/top5meme/2.jpg")) {
+    else if (!strcmp(buf, "/top5meme/2.jpg")) {
         SendFile(sock, "./top5meme/2.jpg", "image/jpg");
     }
-    else if (!strcmp(buf2, "/top5meme/3.jpg")) {
+    else if (!strcmp(buf, "/top5meme/3.jpg")) {
         SendFile(sock, "./top5meme/3.jpg", "image/jpg");
     }
-    else if (!strcmp(buf2, "/top5meme/4.png")) {
+    else if (!strcmp(buf, "/top5meme/4.png")) {
         SendFile(sock, "./top5meme/4.png", "image/png");
     }
-    else if (!strcmp(buf2, "/top5meme/5.jpg")) {
+    else if (!strcmp(buf, "/top5meme/5.jpg")) {
         SendFile(sock, "./top5meme/5.jpg", "image/jpg");
     }
-    else if (!strcmp(buf2, "/first_page/404.png")) {
+    else if (!strcmp(buf, "/first_page/404.png")) {
         SendFile(sock, "./first_page/404.png", "image/png");
     }
-    else if (!strcmp(buf2, "/favicon.ico")) {
+    else if (!strcmp(buf, "/favicon.ico")) {
         SendFile(sock, "./favicon.ico", "image/ico");
     }
     else {
         SendFile(sock, "./first_page/404.png", "image/png");
     }
+    fprintf(stderr, "--------------------------------------------------------[+] Ending work with sock %d\n", sock);
+    return NULL;
 }
