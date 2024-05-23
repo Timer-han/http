@@ -11,11 +11,10 @@
 #include <math.h>
 #include <sys/stat.h>
 
-#include <pthread.h> 
+#include <pthread.h>
 
 void *work(void *sok);
 int SendFile(int sock, const char *file, const char *type);
-
 
 int SendFile(int sock, const char *file, const char *type)
 {
@@ -59,7 +58,6 @@ int SendFile(int sock, const char *file, const char *type)
         fclose(fin);
         return -1;
     }
-    
 
     fprintf(stderr, "[+] Sending the file\n");
 
@@ -132,11 +130,10 @@ int main(int, char **)
 
         printf("[+] New connection accepted from %d.%d.%d.%d on port %d\n", (ip_h >> 24) & 0xff, (ip_h >> 16) & 0xff,
                (ip_h >> 8) & 0xff, ip_h & 0xff, htons(peer_addr.sin_port));
-        if ((int) ((ip_h >> 24) & 0xff) == 14) {
+        if ((int)((ip_h >> 24) & 0xff) == 14) {
             continue;
         }
-        pthread_create(&thread1, NULL, work, (void*) (&sock_peer));
-
+        pthread_create(&thread1, NULL, work, (void *)(&sock_peer));
     }
     close(sock);
     return 0;
@@ -155,16 +152,18 @@ void *work(void *sok)
     // 5. Делаем send()
     char buf[1000];
     int r, sock = *((int *)sok);
-    fprintf(stderr, "--------------------------------------------------------[+] Starting work with sock %d\n", sock);
-
+    fprintf(stderr,
+            "--------------------------------------------------------[+] "
+            "Starting work with sock %d\n",
+            sock);
 
     r = recv(sock, buf, sizeof(buf) - 1, 0);
-    if (r <= 3){
+    if (r <= 3) {
         return NULL;
     }
     buf[r] = '\0';
 
-    if (strncmp(buf, "GET", 3)){
+    if (strncmp(buf, "GET", 3)) {
         return NULL;
     }
 
@@ -176,7 +175,6 @@ void *work(void *sok)
             break;
         }
     }
-
 
     printf("[+] Trying to send the file: %s\n", buf);
     if (!strcmp(buf, "/")) {
@@ -212,6 +210,9 @@ void *work(void *sok)
     else {
         SendFile(sock, "./first_page/404.png", "image/png");
     }
-    fprintf(stderr, "--------------------------------------------------------[+] Ending work with sock %d\n", sock);
+    fprintf(stderr,
+            "--------------------------------------------------------[+] Ending "
+            "work with sock %d\n",
+            sock);
     return NULL;
 }
