@@ -88,8 +88,8 @@ int SendFile(int sock, const char *file, const char *type)
 
 int main(int, char **)
 {
-    const unsigned short port = 8077;
-    int sock, sock_peer, ip_h;
+    const unsigned short port = 8083;
+    int sock, *sock_peer, ip_h;
     struct sockaddr_in addr, peer_addr;
     struct linger linger_opt = {1, 0};
     socklen_t peer_addr_size = sizeof(peer_addr);
@@ -120,8 +120,9 @@ int main(int, char **)
     }
     printf("[+] Server listening on port %d\n", port);
     while (1) {
-        sock_peer = accept(sock, (struct sockaddr *)&peer_addr, &peer_addr_size);
-        if (sock_peer < 0) {
+        sock_peer = (int *) malloc(sizeof(int));
+        sock_peer[0] = accept(sock, (struct sockaddr *)&peer_addr, &peer_addr_size);
+        if (sock_peer[0] < 0) {
             printf("[-] Can't accept new connection\n");
             close(sock);
             return -1;
@@ -133,7 +134,7 @@ int main(int, char **)
         if ((int)((ip_h >> 24) & 0xff) == 14) {
             continue;
         }
-        pthread_create(&thread1, NULL, work, (void *)(&sock_peer));
+        pthread_create(&thread1, NULL, work, (void *)(sock_peer));
     }
     close(sock);
     return 0;
@@ -152,6 +153,7 @@ void *work(void *sok)
     // 5. Делаем send()
     char buf[1000];
     int r, sock = *((int *)sok);
+    free(sok);
     fprintf(stderr,
             "--------------------------------------------------------[+] "
             "Starting work with sock %d\n",
@@ -180,7 +182,7 @@ void *work(void *sok)
     if (!strcmp(buf, "/")) {
         SendFile(sock, "./first_page/page.html", "text/html; charset=utf-8");
     }
-    else if (!strcmp(buf, "first_page/404.png")) {
+    else if (!strcmp(buf, "/first_page/404.png")) {
         SendFile(sock, "./first_page/404.png", "image/png");
     }
     else if (!strcmp(buf, "/top5meme/page.html")) {
