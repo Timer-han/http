@@ -6,10 +6,9 @@
         "stat.h": "c",
         "netdb.h": "c"
     },
-    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Microsoft, UseTab: Never, IndentWidth: 4, TabWidth: 4, BreakBeforeBraces: Allman, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false, ColumnLimit: 0, AccessModifierOffset: -4, NamespaceIndentation: All, FixNamespaceComments: false,  BraceWrapping(AfterControlStatement: false) }",
-    "C_Cpp.clang_format_style": "{ BasedOnStyle: Microsoft, UseTab: Never, IndentWidth: 4, TabWidth: 4, BreakBeforeBraces: Allman, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false, ColumnLimit: 0, AccessModifierOffset: -4, NamespaceIndentation: All, FixNamespaceComments: false,  BraceWrapping(AfterControlStatement: false) }",
+    "C_Cpp.clang_format_fallbackStyle": "{BasedOnStyle: llvm, IndentWidth: 4, AlignTrailingComments: false, BreakBeforeBraces: Linux, AllowShortFunctionsOnASingleLine: Inline}",
+    "C_Cpp.clang_format_style": "{BasedOnStyle: llvm, IndentWidth: 4, AlignTrailingComments: false, BreakBeforeBraces: Linux, AllowShortFunctionsOnASingleLine: Inline}",
     "clang-format.fallbackStyle": "Microsoft",
-    "background.customImages": [
-        "https:///../../../Pictures/Wallpapers/img_7680_4320_a329.jpg",
-    ]
+
+
 }

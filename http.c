@@ -32,6 +32,7 @@ int SendFile(int sock, const char *file, const char *type)
         fgetc(fin);
         n++;
     }
+    
     fprintf(stderr, "[+] size of \"%s\" is %d\n", file, n);
     rewind(fin);
 
@@ -178,7 +179,7 @@ void *work(void *sok)
         }
     }
 
-    printf("[+] Trying to send the file: %s\n", buf);
+    printf("[+] Trying to answer on request: %s\n", buf);
     if (!strcmp(buf, "/")) {
         SendFile(sock, "./first_page/page.html", "text/html; charset=utf-8");
     }
